@@ -4,22 +4,25 @@ from tqdm import tqdm
 import time
 import json
 
+
 def get_token():
-    '''Получение токена из файла'''
+    """Получение токена из файла"""
     with open('token.txt', 'r') as text:
-        tokenVK = text.readline().strip()
-        tokenYA = text.readline().strip()
-    return tokenVK, tokenYA
+        token_vk = text.readline().strip()
+        token_ya = text.readline().strip()
+    return token_vk, token_ya
+
 
 def _transform_time(file):
-    '''Перевод даты в привычный формат'''
+    """Перевод даты в привычный формат"""
     date = datetime.datetime.fromtimestamp(file).strftime('%Y-%m-%d %H-%M-%S')
     return date
 
+
 class VK:
-    def __init__(self, token, version, id_user):
+    def __init__(self, token_vk, version, id_user):
         self.params = {
-            'access_token': token,
+            'access_token': token_vk,
             'v': version,
             'owner_id': id_user
         }
@@ -30,7 +33,7 @@ class VK:
             'album_id': 'profile',
             'extended': '1',
             'photo_sizes': '1'
-}
+        }
         res = requests.get(url, params={**self.params, **params})
         profile_list = res.json()
         return profile_list
@@ -64,7 +67,7 @@ class VK:
                 else:
                     name = f'{value["file_name"]} {value["date"]}.jpg'
                 json_list.append({'file_name': name,
-                                 'size': value['size']})
+                                  'size': value['size']})
                 if value["file_name"] == 0:
                     info_upload[name] = img_dict[i][counter]['url']
                     counter += 1
@@ -72,9 +75,10 @@ class VK:
                     info_upload[name] = img_dict[i][0]['url']
         return json_list, info_upload
 
-class yadisk:
-    def __init__(self, tokenYA):
-        self.token = tokenYA
+
+class Yadisk:
+    def __init__(self, token_yandex):
+        self.token = token_yandex
 
     def get_headers(self):
         return {
@@ -98,12 +102,13 @@ class yadisk:
                              'url': f'{value}'}
             response = requests.post(url, headers=headers, params=params_upload)
 
+
 if __name__ == '__main__':
-    tokenVK, tokenYA = get_token()
-    test = VK(tokenVK, '5.131', input('id_user: '))
+    token_vk, token_ya = get_token()
+    test = VK(token_vk, '5.131', input('id_user: '))
     json_list, info_upload = test.get_url_json()
     with open('logs.json', 'w') as w:
         json.dump(json_list, w)
-    testUP = yadisk(tokenYA)
+    testUP = Yadisk(token_ya)
     name_folder = testUP.create_folder(input('Введитя имя папки: '))
     testUP.upload_backup(info_upload, name_folder)
